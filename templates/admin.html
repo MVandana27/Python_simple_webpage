@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mobile Number Validator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --success: #4cc9f0;
+            --warning: #ffbe0b;
+            --danger: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --border-radius: 12px;
+            --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            color: var(--dark);
+            line-height: 1.6;
+            position: relative;
+        }
+
+        /* Centered Container */
+        .container {
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        /* Card Styles */
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            width: 600px;
+            overflow: hidden;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            background: var(--primary);
+            color: white;
+            padding: 24px;
+            text-align: center;
+            position: relative;
+        }
+
+        .card-header h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .card-body {
+            padding: 30px;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--dark);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .input-with-prefix {
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .prefix {
+            padding: 12px 16px;
+            background: var(--light);
+            border: 2px solid #e9ecef;
+            border-right: none;
+            border-radius: 8px 0 0 8px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 0 8px 8px 0;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        /* Button Styles */
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            width: 100%;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn i {
+            font-size: 1.1rem;
+        }
+
+        /* Alert Styles */
+        .alert {
+            padding: 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .alert-success {
+            background-color: rgba(76, 201, 240, 0.1);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .alert-warning {
+            background-color: rgba(255, 190, 11, 0.1);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+
+        .alert-danger {
+            background-color: rgba(247, 37, 133, 0.1);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .alert-icon {
+            font-size: 1.5rem;
+        }
+
+        .error-highlight {
+            border-color: #f72585 !important;
+            box-shadow: 0 0 0 3px rgba(247, 37, 133, 0.2) !important;
+        }
+
+        .error-message {
+            color: #f72585;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        /* Number display styles */
+        .number-display {
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .number-exists {
+            color: var(--danger);
+        }
+
+        .number-new {
+            color: var(--success);
+        }
+
+        /* Admin Link */
+        .admin-link {
+            display: block;
+            text-align: center;
+            margin: 20px 0;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            padding: 10px;
+        }
+
+        .admin-link:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        /* Bottom buttons container */
+        .bottom-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 0 30px 30px;
+        }
+
+        .btn-secondary {
+            background: var(--gray);
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 800px) {
+            .card {
+                max-width: 100%;
+            }
+
+            .card-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .card-body {
+                padding: 20px;
+            }
+
+            body {
+                padding: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .bottom-buttons {
+                padding: 0 20px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h1><i class="fas fa-mobile-alt"></i> Mobile Number Validator</h1>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="mobileForm" novalidate>
+                    <div class="form-group">
+                        <label for="mobile"><i class="fas fa-phone"></i> Enter Mobile Number</label>
+                        <div class="input-with-prefix">
+                            <span class="prefix">+91</span>
+                            <input type="text" id="mobile" name="mobile" placeholder="Enter mobile number" required
+                                value="{{ mobile_value }}"
+                                class="{% if status and color == 'danger' %}error-highlight{% endif %}"
+                                autocomplete="off" />
+                        </div>
+                        <div class="error-message" id="mobileError">
+                            Please enter exactly 10 digits (numbers only)
+                        </div>
+                    </div>
+                    <button type="submit" class="btn">
+                        <i class="fas fa-check-circle"></i> Verify Number
+                    </button>
+                </form>
+
+                {% if status %}
+                <div class="alert alert-{{ color }}">
+                    <i class="fas
+                        {% if color == 'success' %}fa-check-circle alert-icon
+                        {% elif color == 'danger' %}fa-times-circle alert-icon
+                        {% else %}fa-exclamation-circle alert-icon{% endif %}"></i>
+                    <span>{{ status }}</span>
+                </div>
+                {% endif %}
+
+                {% if mobile_value %}
+                <div class="number-display
+                    {% if number_exists %}number-exists{% else %}number-new{% endif %}">
+                    +91{{ mobile_value }}
+                </div>
+                {% endif %}
+
+                <a href="{{ url_for('dashboard') }}" class="admin-link">
+                    <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+                </a>
+            </div>
+
+            <div class="bottom-buttons">
+                <a href="{{ url_for('create_user') }}" class="btn">
+                    <i class="fas fa-user-plus"></i> Create New User
+                </a>
+                <a href="{{ url_for('logout') }}" class="btn btn-secondary">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const mobileInput = document.getElementById("mobile");
+        const errorElement = document.getElementById("mobileError");
+
+        mobileInput.addEventListener("input", function () {
+            // Remove non-digit characters
+            this.value = this.value.replace(/\D/g, '');
+
+            // Limit to 10 digits
+            if (this.value.length > 10) {
+                this.value = this.value.slice(0, 10);
+            }
+
+            // Show/hide error message dynamically
+            if (this.value.length > 0 && !/^\d{10}$/.test(this.value)) {
+                this.classList.add("error-highlight");
+                errorElement.style.display = 'block';
+            } else {
+                this.classList.remove("error-highlight");
+                errorElement.style.display = 'none';
+            }
+        });
+
+        // Validate on submit
+        document.getElementById("mobileForm").addEventListener("submit", function (e) {
+            if (!/^\d{10}$/.test(mobileInput.value)) {
+                e.preventDefault();
+                mobileInput.classList.add("error-highlight");
+                errorElement.style.display = 'block';
+                errorElement.textContent = "Please enter exactly 10 digits (numbers only)";
+                mobileInput.focus();
+            }
+        });
+
+        // Autofocus on page load
+        window.onload = () => {
+            mobileInput.focus();
+        };
+    </script>
+</body>
+
+</html>

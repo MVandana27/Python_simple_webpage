@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard - Mobile Numbers</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        /* Existing styles here, unchanged */
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --success: #4cc9f0;
+            --warning: #ffbe0b;
+            --danger: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --border-radius: 12px;
+            --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Poppins", sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header h1 {
+            color: var(--primary);
+            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header h1 i {
+            font-size: 1.8rem;
+        }
+
+        /* Search Input Styles */
+        #searchInput {
+            width: 100%;
+            max-width: 400px;
+            padding: 12px 16px;
+            font-size: 1rem;
+            border-radius: var(--border-radius);
+            border: 1px solid #ccc;
+            margin-bottom: 25px;
+            transition: var(--transition);
+        }
+
+        #searchInput:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 5px var(--primary);
+        }
+
+        /* Table Styles */
+        .table-container {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        th,
+        td {
+            padding: 16px 20px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        th {
+            background-color: var(--primary);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f1f3f5;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-primary {
+            background-color: rgba(67, 97, 238, 0.1);
+            color: var(--primary);
+        }
+
+        /* Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: var(--transition);
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn i {
+            font-size: 0.9rem;
+        }
+
+        /* Stats Cards */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .stat-icon-primary {
+            background: var(--primary);
+        }
+
+        .stat-content h3 {
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin-bottom: 4px;
+        }
+
+        .stat-content p {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--dark);
+            margin: 0;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            th,
+            td {
+                padding: 12px 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <i class="fas fa-user-shield"></i> Registered Mobile Numbers
+            </h1>
+            <a href="{{ url_for('admin_dashboard') if session['username'] == 'admin' else url_for('user_dashboard') }}"
+                class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Back to Validator
+            </a>
+
+        </div>
+
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 20px;">
+            <div class="stats-container" style="margin-bottom: 0;">
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-primary">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Total Numbers</h3>
+                        <p>{{ numbers|length }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <input type="text" id="searchInput" placeholder="Search mobile numbers..."
+                aria-label="Search mobile numbers" style="max-width: 400px; width: 100%;" />
+        </div>
+        <!-- Edit Modal -->
+        <div id="editModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
+    background-color: rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1000;">
+            <div
+                style="background:white; padding:30px; border-radius:12px; width:100%; max-width:400px; position:relative;">
+                <h3 style="margin-bottom:20px;">Edit Mobile Number</h3>
+                <form id="editForm" method="POST">
+                    <input type="text" id="editNumber" name="number" required
+                        style="width:100%; padding:12px; font-size:1rem; margin-bottom:20px;" />
+                    <input type="hidden" id="editId" name="id" />
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save
+                    </button>
+                    <button type="button" onclick="closeEditModal()" class="btn"
+                        style="margin-left:10px; background:#ccc;">Cancel</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table id="numbersTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Mobile Number</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for number in numbers %}
+                    <tr>
+                        <td>{{ number.id }}</td>
+                        <td>
+                            {% if number.number.startswith('+91') %}
+                            {{ number.number }}
+                            {% else %}
+                            +91{{ number.number }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge badge-primary">Verified</span>
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ url_for('delete_number', number_id=number.id) }}"
+                                onsubmit="return confirm('Are you sure you want to delete this number?');">
+                                <button type="submit" class="btn btn-primary" style="background-color: var(--danger);">
+                                    <i class="fas fa-trash-alt"></i> Delete
+                                </button>
+                            </form>
+                            <button class="btn btn-primary" data-id="{{ number.id }}" data-number="{{ number.number }}"
+                                onclick="openEditModal(this)">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </td>
+
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Filter table rows based on search input
+        document.getElementById("searchInput").addEventListener("input", function () {
+            const filter = this.value.toLowerCase();
+            const rows = document.querySelectorAll("#numbersTable tbody tr");
+
+            rows.forEach((row) => {
+                const mobileCell = row.querySelector("td:nth-child(2)").textContent.toLowerCase();
+                if (mobileCell.includes(filter)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        });
+    </script>
+    <script>
+        function openEditModal(button) {
+            const id = button.getAttribute('data-id');
+            const number = button.getAttribute('data-number');
+
+            document.getElementById('editNumber').value = number;
+            document.getElementById('editId').value = id;
+
+            const modal = document.getElementById('editModal');
+            modal.style.display = 'flex';
+
+            // Set form action dynamically
+            document.getElementById('editForm').action = `/edit/${id}`;
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+    </script>
+
+</body>
+
+</html>
