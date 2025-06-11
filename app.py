@@ -1,3 +1,5 @@
+from flask import flash
+import re
 from werkzeug.security import check_password_hash
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 import mysql.connector
@@ -9,8 +11,8 @@ app.secret_key = "d#f3!gT9@7kLmZqX!2vW8*p$L"
 
 # login credentials for user and admin
 users = {
-    "admin": "admin@123",
-    "user": "user@123"
+    "admin": "",
+    "user": ""
 }
 
 # Database configuration
@@ -41,12 +43,13 @@ def login():
         username = request.form.get("username")
         password = request.form.get("password")
 
-        # Check hardcoded users
         if username in users and users[username] == password:
             session['username'] = username
-            return redirect(url_for("admin_dashboard" if username == "admin" else "user_dashboard"))
+            if username == "admin":
+                return redirect(url_for("admin_dashboard"))
+            else:
+                return redirect(url_for("user_dashboard"))
 
-        # Check DB users
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
@@ -55,7 +58,7 @@ def login():
         conn.close()
 
         if user:
-            # Check password
+            # it check the password stores in the database
             if check_password_hash(user['password'], password):
                 session['username'] = user['username']
                 if user['role'] == "admin":
@@ -95,18 +98,105 @@ def delete_number(number_id):
 
 @app.route("/edit/<int:number_id>", methods=["POST"])
 def edit_number(number_id):
-    new_number = request.form["number"]
-    if not new_number.startswith("+91"):
-        new_number = "+91" + new_number
+    raw_input = request.form["number"].strip()
+
+    if not raw_input.startswith("+91") or not raw_input[3:].isdigit() or len(raw_input[3:]) != 10:
+        flash("Invalid number format. Must start with +91 and have 10 digits.", "error")
+        return redirect(url_for("dashboard"))
+
+    new_number = raw_input[3:]  # Remove +91 since DB stores plain number
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        # Check if this number exists (excluding current ID)
+        cursor.execute(
+            "SELECT id FROM mobile_numbers WHERE number = %s AND id != %s",
+            (new_number, number_id)
+        )
+        if cursor.fetchone():
+            flash("This number already exists in the database.", "error")
+            return redirect(url_for("dashboard"))
+
+        # Update the number
+        cursor.execute(
+            "UPDATE mobile_numbers SET number = %s WHERE id = %s",
+            (new_number, number_id)
+        )
+        conn.commit()
+        flash("Number updated successfully.", "success")
+    except Exception as e:
+        print("Error updating number:", e)
+        flash("Error updating number.", "error")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for("dashboard"))
+
+# route to add a new mobile number to the database
+
+
+@app.route("/add", methods=["POST"])
+def add_number():
+    raw_input = request.form["number"].strip()
+
+    if not raw_input.startswith("+91") or not raw_input[3:].isdigit() or len(raw_input[3:]) != 10:
+        flash("Invalid number format. Must start with +91 and have 10 digits.", "error")
+        return redirect(url_for("dashboard"))
+
+    new_number = raw_input[3:]
 
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "UPDATE mobile_numbers SET number = %s WHERE id = %s", (new_number, number_id))
+            "SELECT id FROM mobile_numbers WHERE number = %s", (new_number,))
+        if cursor.fetchone():
+            flash("This number already exists in the database.", "error")
+            return redirect(url_for("dashboard"))
+
+        cursor.execute(
+            "INSERT INTO mobile_numbers (number) VALUES (%s)", (new_number,))
         conn.commit()
+        flash("Number added successfully.", "success")
     except Exception as e:
-        print(f"Error updating number: {e}")
+        print("Error inserting number:", e)
+        flash("Error inserting number.", "error")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for("dashboard"))
+
+# route to edit user details (admin only)
+
+
+@app.route("/edit_user/<username>", methods=["POST"])
+def edit_user(username):
+    role = request.form.get("role", "").strip()
+    status = request.form.get("status", "").strip()
+
+    if role not in ("admin", "user"):
+        flash("Invalid role selected.", "error")
+        return redirect(url_for("dashboard"))
+
+    if status not in ("Verified", "Not Verified"):
+        flash("Invalid status selected.", "error")
+        return redirect(url_for("dashboard"))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "UPDATE users SET role = %s, status = %s WHERE username = %s",
+            (role, status, username)
+        )
+        conn.commit()
+        flash(f"User '{username}' updated successfully.", "success")
+    except Exception as e:
+        print("Error updating user:", e)
+        flash("Error updating user.", "error")
     finally:
         cursor.close()
         conn.close()
@@ -115,9 +205,23 @@ def edit_number(number_id):
 
 
 # admin dashboard route to manage mobile numbers
+
+
 @app.route("/admin", methods=["GET", "POST"])
 def admin_dashboard():
-    if session.get('username') != 'admin':
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    # Check if the user has admin role
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT role FROM users WHERE username = %s",
+                   (session['username'],))
+    user = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if session['username'] != 'admin' and (not user or user['role'] != 'admin'):
         return redirect(url_for('login'))
 
     status = None
@@ -130,7 +234,6 @@ def admin_dashboard():
         if mobile_value and mobile_value.isdigit() and len(mobile_value) == 10:
             conn = get_db_connection()
             cursor = conn.cursor()
-
             cursor.execute(
                 "SELECT number FROM mobile_numbers WHERE number = %s", (mobile_value,))
             existing = cursor.fetchone()
@@ -151,7 +254,7 @@ def admin_dashboard():
             status = "Please enter a valid 10-digit number."
             color = "warning"
 
-    # Always fetch the list of numbers to display
+    # Fetch numbers
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT id, number FROM mobile_numbers ORDER BY id DESC")
@@ -193,7 +296,8 @@ def submit_number():
     conn.close()
     return redirect(url_for('dashboard'))
 
-# Dashboard route for admin to view and manage mobile numbers
+
+# dashboard route for admin to view and manage mobile numbers and users
 
 
 @app.route('/dashboard')
@@ -203,13 +307,41 @@ def dashboard():
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
+
+    # Mobile numbers
     cursor.execute("SELECT id, number FROM mobile_numbers ORDER BY id DESC")
     numbers = cursor.fetchall()
+
+    # Users
+    cursor.execute(
+        "SELECT username, status, role FROM users ORDER BY username ASC")
+    users = cursor.fetchall()
+
     cursor.close()
     conn.close()
-    print(numbers)
 
-    return render_template('dashboard.html', numbers=numbers)
+    return render_template('dashboard.html', numbers=numbers, users=users)
+
+
+# route to delete a user by userid (admin only)
+
+
+@app.route('/delete_user/<string:userid>', methods=['POST'])
+def delete_user(userid):
+    if 'username' not in session or session['username'] != 'admin':
+        flash("Unauthorized access.", "error")
+        return redirect(url_for('dashboard'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM users WHERE userid = %s", (userid,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    flash(f"User '{userid}' deleted successfully.", "success")
+    return redirect(url_for('dashboard'))
+
 
 # user dashboard route
 
@@ -224,10 +356,24 @@ def debug_user(username):
     conn.close()
     return jsonify(user) if user else "User not found", 200 if user else 404
 
+# user dashboard route to check mobile number registration
+
 
 @app.route("/user", methods=["GET", "POST"])
 def user_dashboard():
-    if session.get('username') != 'user':
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    # Check if the user has user role
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT role FROM users WHERE username = %s",
+                   (session['username'],))
+    user = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if session['username'] != 'user' and (not user or user['role'] != 'user'):
         return redirect(url_for('login'))
 
     status = None
@@ -265,6 +411,7 @@ def user_dashboard():
         mobile_value=mobile_value,
         number_exists=number_exists
     )
+
 
 # logout route to clear session
 
