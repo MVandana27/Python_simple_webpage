@@ -169,41 +169,6 @@ def add_number():
 
     return redirect(url_for("dashboard"))
 
-# route to edit user details (admin only)
-
-
-@app.route("/edit_user/<username>", methods=["POST"])
-def edit_user(username):
-    role = request.form.get("role", "").strip()
-    status = request.form.get("status", "").strip()
-
-    if role not in ("admin", "user"):
-        flash("Invalid role selected.", "error")
-        return redirect(url_for("dashboard"))
-
-    if status not in ("Verified", "Not Verified"):
-        flash("Invalid status selected.", "error")
-        return redirect(url_for("dashboard"))
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute(
-            "UPDATE users SET role = %s, status = %s WHERE username = %s",
-            (role, status, username)
-        )
-        conn.commit()
-        flash(f"User '{username}' updated successfully.", "success")
-    except Exception as e:
-        print("Error updating user:", e)
-        flash("Error updating user.", "error")
-    finally:
-        cursor.close()
-        conn.close()
-
-    return redirect(url_for("dashboard"))
-
-
 # admin dashboard route to manage mobile numbers
 
 
@@ -314,7 +279,7 @@ def dashboard():
 
     # Users
     cursor.execute(
-        "SELECT username, status, role FROM users ORDER BY username ASC")
+        "SELECT id, username, status, role FROM users ORDER BY username ASC")
     users = cursor.fetchall()
 
     cursor.close()
@@ -326,20 +291,43 @@ def dashboard():
 # route to delete a user by userid (admin only)
 
 
-@app.route('/delete_user/<string:userid>', methods=['POST'])
+@app.route("/delete_user/<int:userid>", methods=["POST"])
 def delete_user(userid):
-    if 'username' not in session or session['username'] != 'admin':
-        flash("Unauthorized access.", "error")
-        return redirect(url_for('dashboard'))
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM users WHERE id = %s", (userid,))
+        conn.commit()
+        flash("User deleted successfully.", "success")
+    except Exception as e:
+        flash(f"Error deleting user: {e}", "error")
+    finally:
+        cursor.close()
+        conn.close()
+    return redirect(url_for('dashboard'))
+
+
+# route to edit a user by username (admin only)
+
+
+@app.route('/edit_user/<username>', methods=['POST'])
+def edit_user(username):
+    new_username = request.form['new_username']
+    role = request.form['role']
+    status = request.form['status']
 
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM users WHERE userid = %s", (userid,))
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-    flash(f"User '{userid}' deleted successfully.", "success")
+    try:
+        cursor.execute("UPDATE users SET username=%s, role=%s, status=%s WHERE username=%s",
+                       (new_username, role, status, username))
+        conn.commit()
+        flash("User updated successfully!", "success")
+    except Exception as e:
+        flash(f"Error updating user: {e}", "error")
+    finally:
+        cursor.close()
+        conn.close()
     return redirect(url_for('dashboard'))
 
 
